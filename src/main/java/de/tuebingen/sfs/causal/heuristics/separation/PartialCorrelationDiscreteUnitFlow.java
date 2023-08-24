@@ -470,7 +470,8 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 		System.err.print("v-structure test for " + varNames[aIndex] + " -> " + varNames[bIndex] + " <- " + varNames[cIndex] + ") = ");
 		System.err.print("chyper(" + abcIntersectionSize + ", " + abCognateSets.size() + ", " + (numBCognateSets - abCognateSets.size()) + ", " + bcCognateSets.size() + ") = ");
 		
-		double pValue = DistLib.hypergeometric.cumulative(abcIntersectionSize, abCognateSets.size(), numBCognateSets - abCognateSets.size(), bcCognateSets.size());
+		double pValue = 0.2;
+		//double pValue = DistLib.hypergeometric.cumulative(abcIntersectionSize, abCognateSets.size(), numBCognateSets - abCognateSets.size(), bcCognateSets.size());
 		System.err.print(pValue);
 
 		if (pValue < 0.10)
