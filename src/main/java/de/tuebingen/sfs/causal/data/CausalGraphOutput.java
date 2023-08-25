@@ -38,8 +38,6 @@ public class CausalGraphOutput {
 
 			out.println(var1 + "\t" + linkRep + "\t" + var2);
 	    }
-		
-		out.close();
 	}
 	
 	public static void outputToGoldStandardFormat(CausalGraph graph, PrintStream out) 

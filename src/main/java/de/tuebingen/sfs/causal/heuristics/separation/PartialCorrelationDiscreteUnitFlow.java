@@ -17,7 +17,7 @@ import de.tuebingen.sfs.util.struct.Triple;
 
 public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<Set<Set<Triple<String,String,String>>>>> {
 
-	public static boolean VERBOSE = true;
+	public static boolean VERBOSE = false;
 	
 	CausalGraph graph;
 	
@@ -180,14 +180,14 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 			int candidate = agenda.remove();
 			//set can be destroyed after this
 			Set<Integer> unprocessedFlow = unprocessedFlows.remove(candidate);
-			if (verbose) System.err.println("Processing " + unprocessedFlow.size() + " units of unprocessed flow at " + varNames[candidate]);
+			if (verbose) System.out.println("Processing " + unprocessedFlow.size() + " units of unprocessed flow at " + varNames[candidate]);
 			unprocessedFlow.removeAll(flowArrived);
 			if (unprocessedFlow.size() == 0) {
 				unprocessedFlows.put(candidate, new TreeSet<Integer>());
 				continue;
 			}
 			if (candidate == yVar) {
-				if (verbose) System.err.println("  " + unprocessedFlow.size() + " units of flow arrived at goal variable " + varNames[candidate]);
+				if (verbose) System.out.println("  " + unprocessedFlow.size() + " units of flow arrived at goal variable " + varNames[candidate]);
 				flowArrived.addAll(unprocessedFlow);
 			}
 			Set<Integer> neighbors = graph.getNeighbors(candidate);
@@ -213,7 +213,7 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 							propagatedFlowSize++;
 						}
 					}
-					if (verbose) System.err.println("  propagated " + propagatedFlowSize + " units of unprocessed flow to " + varNames[neighborVar]);
+					if (verbose) System.out.println("  propagated " + propagatedFlowSize + " units of unprocessed flow to " + varNames[neighborVar]);
 					agenda.add(neighborVar);
 				}
 			}
@@ -371,7 +371,7 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 		String xVarName = varNames[xVar];
 		String yVarName = varNames[yVar];
 		
-		if (VERBOSE) System.err.print("      Correlate flow for X=" + xVarName + " Y=" + yVarName + " Z=" + varSetToString(zVars) + ": ");
+		if (VERBOSE) System.out.print("      Flow for X=" + xVarName + " Y=" + yVarName + " Z=" + varSetToString(zVars) + ": ");
 		
 		Map<Integer,Set<Pair<String,String>>> cognatesPerConcept = null;
 		if (storeOverlaps)
@@ -427,7 +427,7 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 		//double result = unexplainedCorrelates / 1016;
 		if (Math.min(numXSets, numYSets) == 0.0 || result == Double.NaN) result = 0.0;
 		//if (VERBOSE) System.err.println((int) explainedCorrelates + " U " + (int) unexplainedCorrelates + "/min(" + (int) numXSets + "," + (int) numYSets + ") = " + result);
-		if (VERBOSE) System.err.println((int) explainedCorrelates + " U " + (int) unexplainedCorrelates + "/max(" + (int) numXSets + "," + (int) numYSets + ") = " + result);
+		if (VERBOSE) System.out.println((int) explainedCorrelates + " U " + (int) unexplainedCorrelates + "/max(" + (int) numXSets + "," + (int) numYSets + ") = " + result);
 		//if (VERBOSE) System.err.println((int) explainedCorrelates + " U " + (int) unexplainedCorrelates + "/1016 = " + result);
 		//long time = System.currentTimeMillis() - startTime;
 		//System.err.println("Time for partial correlation test: " + time + " ms.");
@@ -438,7 +438,7 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 	@Override
 	public boolean independenceTest(double partialCorrelation, int xVar, int yVar, Set<Integer> zVars) 
 	{
-		if (VERBOSE) System.err.println("      Condition for independence test: " + partialCorrelation + " <= " + thresholds[xVar][yVar] + " = thresholds[" + xVar + "][" + yVar + "]");
+		if (VERBOSE) System.out.println("      Condition for independence test: " + partialCorrelation + " <= " + thresholds[xVar][yVar] + " = thresholds[" + xVar + "][" + yVar + "]");
 		boolean result = (partialCorrelation <= thresholds[xVar][yVar]);
 		return result;
 	}
@@ -467,21 +467,21 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 		}
 		int abcIntersectionSize = SetOperations.getIntersection(abCognateSets, bcCognateSets).size();
 		
-		System.err.print("v-structure test for " + varNames[aIndex] + " -> " + varNames[bIndex] + " <- " + varNames[cIndex] + ") = ");
-		System.err.print("chyper(" + abcIntersectionSize + ", " + abCognateSets.size() + ", " + (numBCognateSets - abCognateSets.size()) + ", " + bcCognateSets.size() + ") = ");
+		System.out.print("v-structure test for " + varNames[aIndex] + " -> " + varNames[bIndex] + " <- " + varNames[cIndex] + ") = ");
+		System.out.print("chyper(" + abcIntersectionSize + ", " + abCognateSets.size() + ", " + (numBCognateSets - abCognateSets.size()) + ", " + bcCognateSets.size() + ") = ");
 		
 		double pValue = 0.2;
 		//double pValue = DistLib.hypergeometric.cumulative(abcIntersectionSize, abCognateSets.size(), numBCognateSets - abCognateSets.size(), bcCognateSets.size());
-		System.err.print(pValue);
+		System.out.print(pValue);
 
 		if (pValue < 0.10)
 		{
-			System.err.println(" => v-structure!");
+			System.out.println(" => v-structure!");
 			return true;
 		}
 		else
 		{
-			System.err.println(" => cannot reject null hypothesis");
+			System.out.println(" => cannot reject null hypothesis");
 			return false;
 		}
 	}
@@ -497,23 +497,23 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 		{
 			if (storeOverlaps)
 			{
-				for (String lang1 : unexplainedOverlaps.keySet())
+				for (String var1 : unexplainedOverlaps.keySet())
 				{
-					for (String lang2 : unexplainedOverlaps.get(lang1).keySet())
+					for (String var2 : unexplainedOverlaps.get(var1).keySet())
 					{
-						System.err.println(varNameToID.get(lang1));
-						System.err.println(varNameToID.get(lang2));
-						boolean lateralLink = !graph.hasPresetLink(varNameToID.get(lang1), varNameToID.get(lang2));
+						System.err.println(varNameToID.get(var1));
+						System.err.println(varNameToID.get(var2));
+						boolean lateralLink = !graph.hasPresetLink(varNameToID.get(var1), varNameToID.get(var2));
 						//System.err.println(lateralLink + " preset link " + lang1  + " (" + varNameToID.get(lang1) + ") -- " + lang2  + " (" + varNameToID.get(lang2) + ")");
-						boolean lang1ToLang2 = graph.hasArrow(varNameToID.get(lang1), varNameToID.get(lang2));
-						boolean lang2ToLang1 = graph.hasArrow(varNameToID.get(lang2), varNameToID.get(lang1));
-						System.err.println("Otherwise unexplained cognate pairs between " + lang1.toUpperCase() + " and " + lang2.toUpperCase());
-						for (Integer cognateSetID : unexplainedOverlaps.get(lang1).get(lang2).keySet()) {
-							for (Pair<String, String> pair : unexplainedOverlaps.get(lang1).get(lang2).get(cognateSetID)) {
+						boolean lang1ToLang2 = graph.hasArrow(varNameToID.get(var1), varNameToID.get(var2));
+						boolean lang2ToLang1 = graph.hasArrow(varNameToID.get(var2), varNameToID.get(var1));
+						System.err.println("Otherwise unexplained overlaps between " + var1.toUpperCase() + " and " + var2.toUpperCase());
+						for (Integer cognateSetID : unexplainedOverlaps.get(var1).get(var2).keySet()) {
+							for (Pair<String, String> pair : unexplainedOverlaps.get(var1).get(var2).get(cognateSetID)) {
 								if (lateralLink && lang1ToLang2 && !lang2ToLang1) {	
-									System.err.println("LOAN" + "\t" + cognateSetID + "\t" + lang1 + "\t" + lang2);
+									System.err.println("LOAN" + "\t" + cognateSetID + "\t" + var1 + "\t" + var2);
 								} else if (lateralLink && !lang1ToLang2 && lang2ToLang1) {	
-									System.err.println("LOAN" + "\t" + cognateSetID + "\t" + lang2 + "\t" + lang1);
+									System.err.println("LOAN" + "\t" + cognateSetID + "\t" + var2 + "\t" + var1);
 								}
 								System.err.println(cognateSetID + "\t" + pair.first + "\t" + pair.second);
 							}

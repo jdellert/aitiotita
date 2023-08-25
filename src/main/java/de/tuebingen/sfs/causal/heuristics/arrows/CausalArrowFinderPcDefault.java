@@ -1,6 +1,5 @@
 package de.tuebingen.sfs.causal.heuristics.arrows;
 
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,8 @@ import de.tuebingen.sfs.util.struct.Pair;
 
 public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 {
-	public static boolean VERBOSE = true;
+	public static boolean BASIC_INFO = true;
+	public static boolean VERBOSE = false;
 	
 	public Map<Integer,Map<Integer,List<Set<Integer>>>> sepSets;
 	public boolean stable;
@@ -29,7 +29,7 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 	
 	public void registerSepSets(int xVar, int yVar, List<Set<Integer>> newSepSets)
 	{
-		System.err.println("registerSepSets(" + xVar + "," + yVar + "," + newSepSets + ")");
+		if (VERBOSE) System.out.println("registerSepSets(" + xVar + "," + yVar + "," + newSepSets + ")");
 		if (newSepSets == null) return;
 		Map<Integer,List<Set<Integer>>> submap = sepSets.get(xVar);
 		if (submap == null)
@@ -54,7 +54,7 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 	{
 		for (Integer[] triple : graph.listUnshieldedTriples())
 		{
-			if (VERBOSE) System.err.print("sepSets[" + varNames[triple[0]] + "][" + varNames[triple[1]] + "] = ");
+			if (VERBOSE) System.out.print("sepSets[" + varNames[triple[0]] + "][" + varNames[triple[1]] + "] = ");
 			List<Set<Integer>> relevantSepSets = sepSets.get(triple[0]).get(triple[1]);
 			if (VERBOSE) {
 				List<Set<String>> sepSetsOutput = new LinkedList<Set<String>>();
@@ -65,7 +65,7 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 					}
 					sepSetsOutput.add(sepSetOutput);
 				}
-				System.err.println(sepSetsOutput);
+				System.out.println(sepSetsOutput);
 			}
 			int sepSetsContainingK = 0;
 			boolean firstSepSetContainsK = false;
@@ -77,12 +77,12 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 					sepSetsContainingK++;
 				}
 			}
-			if (VERBOSE) System.err.println("Separation sets containing " + varNames[triple[2]] + ": " + sepSetsContainingK + "/" + relevantSepSets.size());
+			if (VERBOSE) System.out.println("Separation sets containing " + varNames[triple[2]] + ": " + sepSetsContainingK + "/" + relevantSepSets.size());
 			if (conservative)
 			{
 				if (sepSetsContainingK == 0)
 				{
-					if (VERBOSE) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
+					if (BASIC_INFO) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
 					if (!graph.hasPresetEnd(triple[0], triple[2])) graph.putArrow(triple[0], triple[2], true);
 					if (!graph.hasPresetEnd(triple[1], triple[2])) graph.putArrow(triple[1], triple[2], true);	
 				}
@@ -91,7 +91,7 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 			{
 				if (sepSetsContainingK <= relevantSepSets.size() / 2)
 				{
-					if (VERBOSE) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
+					if (BASIC_INFO) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
 					if (!graph.hasPresetEnd(triple[0], triple[2])) graph.putArrow(triple[0], triple[2], true);
 					if (!graph.hasPresetEnd(triple[1], triple[2])) graph.putArrow(triple[1], triple[2], true);	
 				}
@@ -100,7 +100,7 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 			{
 				if (!firstSepSetContainsK)
 				{
-					if (VERBOSE) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
+					if (BASIC_INFO) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
 					if (!graph.hasPresetEnd(triple[0], triple[2])) graph.putArrow(triple[0], triple[2], true);
 					if (!graph.hasPresetEnd(triple[1], triple[2])) graph.putArrow(triple[1], triple[2], true);	
 				}
