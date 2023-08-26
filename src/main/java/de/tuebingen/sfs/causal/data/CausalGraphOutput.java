@@ -428,11 +428,9 @@ public class CausalGraphOutput {
 	private static String outputVarName(String varName)
 	{
 		return "\"" + varName + "\"";
-		//return LanguageNames.getLanguageName(LanguageNames.normalize(varName)).replaceAll("::", "_").replaceAll("-", "_").replaceAll(" ", "_");
-		//return LanguageNames.normalize(varName).replaceAll("::", "_").replaceAll("-", "_").replaceAll(" ", "_");
 	}
 	
-	public static void outputToDotFormat(CausalGraphSummary graphSummary, PrintStream out, Map<String, Point2D.Double> coordinates, double strengtheningFactor) 
+	public static void outputToDotFormat(CausalGraphSummary graphSummary, PrintStream out, Map<String, Point2D.Double> coordinates, double confidenceThreshold, double strengtheningFactor) 
 	{
 		out.println("digraph CausalGraphSummary");
 		out.println("{");
@@ -454,83 +452,71 @@ public class CausalGraphOutput {
         	String var1 = outputVarName(graphSummary.varNames[link.first]);
         	String var2 = outputVarName(graphSummary.varNames[link.second]);
         	
-        	System.err.print("corrMatrix[" + var1 + "][" + var2 + "] = ");
         	double correlationStrength = ((double) graphSummary.neighborCounts.get(link.first).get(link.second)) / graphSummary.numGraphs;
         	
-        	System.err.println(correlationStrength);
+        	correlationStrength -= confidenceThreshold;
         	
-        	if (correlationStrength == 0.0) continue;
-        	int lineWidth = (int) (correlationStrength / 0.05);
-        	//if (correlationStrength > 0.0025) lineWidth++;       	
-        	//if (correlationStrength > 0.005) lineWidth++;
-        	//if (correlationStrength > 0.01) lineWidth++; 
-        	//if (correlationStrength > 0.02) lineWidth++;   
-        	//if (correlationStrength > 0.04) lineWidth++;   
-        	//if (correlationStrength > 0.08) lineWidth++;   
-        	//if (correlationStrength > 0.16) lineWidth++; 
-        	//if (correlationStrength > 0.32) lineWidth++;
-        	//if (correlationStrength > 0.64) lineWidth++;     	
-        	correlationStrength *= strengtheningFactor; //25 is good for basic correlation, 100 for remnants after causal inference on cognates, 5 on correlations only
-        	if (correlationStrength > 1.0) correlationStrength = 1.0;
-        	String alphaValue = Integer.toHexString((int) (correlationStrength * 255));
+        	if (correlationStrength <= 0.0) continue;
+        	
+        	double opaqueness = correlationStrength * strengtheningFactor; //25 is good for basic correlation, 100 for remnants after causal inference on cognates, 5 on correlations only
+        	if (opaqueness > 1.0) opaqueness = 1.0;
+        	String alphaValue = Integer.toHexString((int) (opaqueness * 255));
         	if (alphaValue.length() == 1) alphaValue = "0" + alphaValue; //add 0 in front of single-digit numbers
         	
-        	if (lineWidth < 2) continue;
+        	int lineWidth = 0;
         	
         	int arrowAndArrowCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.ARROW_ARROW);
         	if (arrowAndArrowCount > 0) {
-        		lineWidth = (int) ((arrowAndArrowCount / (correlationStrength * graphSummary.numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			bidirectedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.ARROW_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        		lineWidth = (int) (((correlationStrength * arrowAndArrowCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		bidirectedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.ARROW_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
         	}
         	
         	int lineAndArrowCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.LINE_ARROW);
         	if (lineAndArrowCount > 0) {
-        		lineWidth = (int) ((lineAndArrowCount / (correlationStrength * graphSummary.numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.LINE_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        		lineWidth = (int) (((correlationStrength * lineAndArrowCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		directedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.LINE_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
         	}
         	
         	int circleAndArrowCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.CIRCLE_ARROW);
         	if (circleAndArrowCount > 0) {
-        		lineWidth = (int) ((circleAndArrowCount / (correlationStrength * graphSummary.numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.CIRCLE_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        		lineWidth = (int) (((correlationStrength * circleAndArrowCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		directedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.CIRCLE_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
         	}
         	
         	int arrowAndLineCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.ARROW_LINE);
         	if (arrowAndLineCount > 0) {
-        		lineWidth = (int) ((arrowAndLineCount / (correlationStrength * graphSummary.numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(var2 + " -> " + var1 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.ARROW_LINE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        		lineWidth = (int) (((correlationStrength * arrowAndLineCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		directedSubgraphLink.add(var2 + " -> " + var1 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.ARROW_LINE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
         	}
         	
         	int circleAndLineCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.CIRCLE_LINE);
         	if (circleAndLineCount > 0) {
-        		lineWidth = (int) ((circleAndLineCount / (correlationStrength * graphSummary.numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(var2 + " -> " + var1 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.CIRCLE_LINE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        		lineWidth = (int) (((correlationStrength * circleAndLineCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		directedSubgraphLink.add(var2 + " -> " + var1 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.CIRCLE_LINE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
         	}
         	
         	int arrowAndCircleCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.ARROW_CIRCLE);
         	if (arrowAndCircleCount > 0) {
-        		lineWidth = (int) ((arrowAndCircleCount / (correlationStrength * graphSummary.numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(var2 + " -> " + var1 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.ARROW_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        		lineWidth = (int) (((correlationStrength * arrowAndCircleCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		directedSubgraphLink.add(var2 + " -> " + var1 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.ARROW_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
         	}
         	
         	int lineAndCircleCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.LINE_CIRCLE);
         	if (lineAndCircleCount > 0) {
-        		lineWidth = (int) ((lineAndCircleCount / (correlationStrength * graphSummary.numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.LINE_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        		lineWidth = (int) (((correlationStrength * lineAndCircleCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		directedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.LINE_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
         	}
         	
         	int circleAndCircleCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.CIRCLE_CIRCLE);
         	if (circleAndCircleCount > 0) {
-        		lineWidth = (int) ((circleAndCircleCount / (correlationStrength * graphSummary.numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			undirectedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.CIRCLE_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        		lineWidth = (int) (((correlationStrength * circleAndCircleCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		undirectedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.CIRCLE_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
+        	}
+        	
+        	int lineAndLineCount = graphSummary.getArrowCount(link.first, link.second, CausalGraphSummary.LINE_LINE);
+        	if (lineAndLineCount > 0) {
+        		lineWidth = (int) (((correlationStrength * lineAndLineCount) / graphSummary.numGraphs) / 0.05) + 1;
+        		undirectedSubgraphLink.add(var1 + " -> " + var2 + " [color=\"" + graphSummary.getLinkColor(link.first, link.second, CausalGraphSummary.LINE_LINE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
         	}
         	
         }
