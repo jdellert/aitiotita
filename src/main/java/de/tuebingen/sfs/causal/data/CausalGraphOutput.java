@@ -257,9 +257,9 @@ public class CausalGraphOutput {
 	{
 		//about 3600 pixels wide and 800 pixels high (northern hemisphere only)
 		//left bound at longitude -20 degrees (just west of iceland)
-		double xOffset = -20.0;
-		double scalingFactor = 50;
-		outputToDotFormat(graph, out, coordinates, strengtheningFactor, xOffset, scalingFactor, 360);
+		//double xOffset = -20.0;
+		//double scalingFactor = 50;
+		outputToDotFormat(graph, out, coordinates, strengtheningFactor, 0, 1, 360);
 	}
 	
 	public static void outputToDotFormat(CausalGraph graph, PrintStream out, Map<String, Point2D.Double> coordinates, double strengtheningFactor, double xOffset, double scalingFactor, double xWrapAround) 
@@ -267,12 +267,12 @@ public class CausalGraphOutput {
 		out.println("digraph CausalGraph");
 		out.println("{");
 		out.println("  splines=true;");
-		out.println("  node [ fontname=Arial, fontcolor=blue, fontsize=20];");
+		out.println("  node [fontcolor=blue, fontsize=20];");
 		
 		for (String varName : graph.nameToVar.keySet())
 		{
 			Point2D.Double position = null;
-			if (coordinates != null) position = coordinates.get(outputVarName(varName));
+			if (coordinates != null) position = coordinates.get(varName);
 			//System.err.println("coordinates.get(" + outputVarName(varName) + "=outputVarName(" + varName + ")) = " + position);
 			if (position == null)
 			{
@@ -283,8 +283,7 @@ public class CausalGraphOutput {
 				double xPos = position.getY() - xOffset;
 				if (xPos <= 0) xPos += xWrapAround;
 				double yPos = position.getX();
-				//TODO: context-dependent scaling factor
-				out.println("  " + outputVarName(varName) + " [pos=\"" + (xPos * scalingFactor) + "," + (yPos * scalingFactor) + "\", width=\"0.1\", height=\"0.05\"];");
+				out.println("  " + outputVarName(varName) + " [pos=\"" + (xPos * scalingFactor) + "," + (yPos * scalingFactor) + "!\"];");
 			}
 		}
 		

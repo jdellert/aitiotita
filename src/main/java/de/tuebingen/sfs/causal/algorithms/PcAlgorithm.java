@@ -50,7 +50,7 @@ public class PcAlgorithm {
 	}
 
 	public void runSkeletonInference() {
-		separatingSets = new TreeMap<Integer, Map<Integer, List<Set<Integer>>>>();
+		initializeSepSets();
 
 		// phase 1: create skeleton
 
@@ -241,10 +241,14 @@ public class PcAlgorithm {
 			for (Integer[] triple : graph.listUnshieldedTriples()) {
 				List<Set<Integer>> relevantSepSets = separatingSets.get(triple[0]).get(triple[1]);
 				int sepSetsContainingK = 0;
-				for (Set<Integer> sepSet : relevantSepSets) {
-					if (sepSet.contains(triple[2])) {
-						sepSetsContainingK++;
+				int numRelevantSepSets = 0;
+				if (relevantSepSets != null) {
+					for (Set<Integer> sepSet : relevantSepSets) {
+						if (sepSet.contains(triple[2])) {
+							sepSetsContainingK++;
+						}
 					}
+					numRelevantSepSets = relevantSepSets.size();
 				}
 				// System.err.println("Separation sets containing K: " + sepSetsContainingK +
 				// "/" + relevantSepSets.size());
@@ -257,7 +261,7 @@ public class PcAlgorithm {
 						graph.putArrow(triple[1], triple[2], true);
 					}
 				} else {
-					if (sepSetsContainingK <= relevantSepSets.size() / 2) {
+					if (sepSetsContainingK <= numRelevantSepSets / 2) {
 						if (BASIC_INFO)
 							System.err.println("Found v-structure: " + varNames[triple[0]] + " -> "
 									+ varNames[triple[2]] + " <- " + varNames[triple[1]]);
@@ -306,6 +310,13 @@ public class PcAlgorithm {
 			submap.put(var2, sepSetsForVarPair);
 		}
 		sepSetsForVarPair.add(sepSet);
+	}
+	
+	protected void initializeSepSets() {
+		separatingSets = new TreeMap<Integer, Map<Integer, List<Set<Integer>>>>();
+		for (int var = 0; var < varNames.length; var++) {
+			separatingSets.put(var, new TreeMap<Integer, List<Set<Integer>>>());
+		}
 	}
 
 	private void registerSepSets(Pair<Integer, Integer> link) {

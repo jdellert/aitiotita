@@ -26,6 +26,7 @@ public class PcStarAlgorithm extends PcAlgorithm {
 	}
 
 	public void runSkeletonInference() {
+		initializeSepSets();
 
 		for (int depth = 0; depth <= maxCondSetSize; depth++) {
 			List<Pair<Integer, Integer>> links = graph.listAllDeletableLinks();
