@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -39,11 +40,15 @@ public class PcStarAlgorithm extends PcAlgorithm {
 			// sort links by remaining link strength, remove weakest links first
 			List<RankingEntry<Pair<Integer, Integer>>> linkRanking = new ArrayList<RankingEntry<Pair<Integer, Integer>>>(
 					links.size());
+			// make sure the random tie-breaking noise (and thereby the link ordering) will always be the same on the same data
+			Random rand = new Random(links.size());
 			for (Pair<Integer, Integer> link : links) {
-				double minPartialCorrelation = 1.0;
+				double partialCorrelation = 1.0;
 				if (depth > 0)
-					minPartialCorrelation = graph.getRemainingLinkStrength(link.first, link.second);
-				linkRanking.add(new RankingEntry<Pair<Integer, Integer>>(link, minPartialCorrelation));
+					partialCorrelation = graph.getRemainingLinkStrength(link.first, link.second);
+				//add uniformly distributed noise of up to 5 percent the original value
+				partialCorrelation += rand.nextDouble() * partialCorrelation / 20;
+				linkRanking.add(new RankingEntry<Pair<Integer, Integer>>(link, partialCorrelation));
 			}
 			
 			if (randomLinkOrder) {
