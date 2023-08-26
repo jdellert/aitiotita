@@ -43,6 +43,9 @@ public class CausalGraph
 	Map<Integer,Map<Integer,Boolean>> hasPresetLink;
 	Map<Integer,Map<Integer,Boolean>> hasPresetEndSymbol;	
 	
+	//remaining link strength (used to prioritize links to remove, and determines width of edges in output)
+	Map<Integer, Map<Integer, Double>> remainingLinkStrength;
+	
 	//optional display: coordinates and colors
 	Map<Integer, Map<Integer, String>> colors;
 	Map<Integer, Point2D.Double> coordinates;
@@ -80,6 +83,11 @@ public class CausalGraph
 		for (int varIndex = 0; varIndex < varNames.length; varIndex++)
 		{
 			hasPresetEndSymbol.put(varIndex, new TreeMap<Integer, Boolean>());
+		}
+		
+		remainingLinkStrength = new TreeMap<Integer, Map<Integer, Double>>();
+		for (int var = 0; var < varNames.length; var++) {
+			remainingLinkStrength.put(var, new TreeMap<Integer, Double>());
 		}
 		
 		colors = new TreeMap<Integer,Map<Integer, String>>();
@@ -156,6 +164,18 @@ public class CausalGraph
 			//System.err.println("WARNING: touching preset end symbol (this should not happen!)");
 		}
 		endSymbol.get(var1).put(var2, symbol);
+	}
+	
+	public void convertCirclesToLines() {
+		for (int var1 : endSymbol.keySet()) {
+			Map<Integer,Integer> endSymbolsForVar1 = endSymbol.get(var1);
+			for (int var2 : endSymbolsForVar1.keySet()) {
+				Integer endSymbolForVar1Var2 = endSymbolsForVar1.get(var2);
+				if (endSymbolForVar1Var2 == CausalGraph.CIRCLE_END) {
+					endSymbolsForVar1.put(var2, CausalGraph.LINE_END);
+				}
+			}
+		}
 	}
 	
 	public boolean hasArrow(int var1, int var2)
@@ -400,6 +420,29 @@ public class CausalGraph
 			}
 		}
 		return parents;
+	}
+	
+	public double getRemainingLinkStrength(int var1, int var2) {
+		if (!hasLink(var1,var2)) return 0.0;
+		Map<Integer, Double> strengths = remainingLinkStrength.get(var1);
+		if (strengths == null) return 1.0;
+		Double strength = strengths.get(var1);
+		if (strength == null) return 1.0;
+		else return strength;
+	}
+	
+	public void setRemainingLinkStrength(int var1, int var2, double strength) {
+		if (!hasLink(var1,var2)) {
+			System.err.println("WARNING: setting remaining link strength for " 
+		    + "non-existing link (" + varNames[var1] + "," + varNames[var2] + ")." 
+			+ "This should not happen!");
+		}
+		Map<Integer, Double> strengths = remainingLinkStrength.get(var1);
+		if (strengths == null) {
+			strengths = new TreeMap<Integer,Double>();
+			remainingLinkStrength.put(var1, strengths);
+		}
+		strengths.put(var2, strength);
 	}
 	
 	public Set<Integer> getAncestors(int var)

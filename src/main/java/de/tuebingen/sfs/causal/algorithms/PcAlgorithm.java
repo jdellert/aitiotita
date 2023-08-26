@@ -29,7 +29,6 @@ public class PcAlgorithm {
 	boolean stable;
 
 	public Map<Integer, Map<Integer, List<Set<Integer>>>> separatingSets;
-	public Map<Integer, Map<Integer, Double>> remainingLinkStrength;
 
 	public PcAlgorithm(PartialCorrelation<?> corrMeasure, CausalArrowFinder<?> arrowFinder, String[] varNames,
 			CausalGraph initialGraphWithConstraints, int maxCondSetSize, boolean stable, boolean conservative) {
@@ -54,10 +53,6 @@ public class PcAlgorithm {
 		separatingSets = new TreeMap<Integer, Map<Integer, List<Set<Integer>>>>();
 
 		// phase 1: create skeleton
-		remainingLinkStrength = new TreeMap<Integer, Map<Integer, Double>>();
-		for (int var = 0; var < varNames.length; var++) {
-			remainingLinkStrength.put(var, new TreeMap<Integer, Double>());
-		}
 
 		for (int depth = 0; depth <= maxCondSetSize; depth++) {
 			List<Pair<Integer, Integer>> links = graph.listAllDeletableLinks();
@@ -87,8 +82,8 @@ public class PcAlgorithm {
 							neighborVariables);
 					if (graph.hasPresetLink(link.first, link.second)) {
 						graph.setUndeletableLink(link.first, link.second, true);
-						remainingLinkStrength.get(link.first).put(link.second, Math.max(partialCorrelation, 0.2));
-						remainingLinkStrength.get(link.second).put(link.first, Math.max(partialCorrelation, 0.2));
+						graph.setRemainingLinkStrength(link.first, link.second, Math.max(partialCorrelation, 0.2));
+						graph.setRemainingLinkStrength(link.second, link.first, Math.max(partialCorrelation, 0.2));
 						continue;
 					}
 					if (corrMeasure.independenceTest(partialCorrelation, link.first, link.second, neighborVariables)) {
@@ -107,8 +102,8 @@ public class PcAlgorithm {
 									+ ") even when conditioning on all variables on connecting paths, i.e. "
 									+ varSetToString(neighborVariables));
 						graph.setUndeletableLink(link.first, link.second, true);
-						remainingLinkStrength.get(link.first).put(link.second, partialCorrelation);
-						remainingLinkStrength.get(link.second).put(link.first, partialCorrelation);
+						graph.setRemainingLinkStrength(link.first, link.second, partialCorrelation);
+						graph.setRemainingLinkStrength(link.second, link.first, partialCorrelation);
 					}
 					linkID++;
 					if (VERBOSE)
@@ -125,7 +120,7 @@ public class PcAlgorithm {
 				boolean foundSepSet = false;
 				double minPartialCorrelation = 1.0;
 				if (depth > 0)
-					minPartialCorrelation = remainingLinkStrength.get(link.first).get(link.second);
+					minPartialCorrelation = graph.getRemainingLinkStrength(link.first, link.second);
 				List<Integer> neighbors1 = new ArrayList<Integer>();
 				for (int neighbor : graph.getNeighbors(link.first)) {
 					if (neighbor != link.second)
@@ -205,9 +200,9 @@ public class PcAlgorithm {
 					}
 				} else {
 					if (presetLink)
-						remainingLinkStrength.get(link.first).put(link.second, 1.0);
+						graph.setRemainingLinkStrength(link.first, link.second, 1.0);
 					else
-						remainingLinkStrength.get(link.first).put(link.second, minPartialCorrelation);
+						graph.setRemainingLinkStrength(link.first, link.second, minPartialCorrelation);
 				}
 			}
 			if (stable) {

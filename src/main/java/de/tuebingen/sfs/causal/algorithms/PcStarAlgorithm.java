@@ -25,10 +25,6 @@ public class PcStarAlgorithm extends PcAlgorithm {
 	}
 
 	public void runSkeletonInference() {
-		remainingLinkStrength = new TreeMap<Integer, Map<Integer, Double>>();
-		for (int var = 0; var < varNames.length; var++) {
-			remainingLinkStrength.put(var, new TreeMap<Integer, Double>());
-		}
 
 		for (int depth = 0; depth <= maxCondSetSize; depth++) {
 			List<Pair<Integer, Integer>> links = graph.listAllDeletableLinks();
@@ -46,7 +42,7 @@ public class PcStarAlgorithm extends PcAlgorithm {
 			for (Pair<Integer, Integer> link : links) {
 				double minPartialCorrelation = 1.0;
 				if (depth > 0)
-					minPartialCorrelation = remainingLinkStrength.get(link.first).get(link.second);
+					minPartialCorrelation = graph.getRemainingLinkStrength(link.first, link.second);
 				linkRanking.add(new RankingEntry<Pair<Integer, Integer>>(link, minPartialCorrelation));
 			}
 			
@@ -73,7 +69,7 @@ public class PcStarAlgorithm extends PcAlgorithm {
 				if (!presetLink) {
 					if (!BASIC_INFO || separatingSetCandidates.size() > 0)
 						System.out.println("  Attempting to separate pair " + varNames[link.first] + "-"
-								+ varNames[link.second] + " using the " + neighbors.size() + " other neighbors of "
+								+ varNames[link.second] + " using the " + neighbors.size() + " neighbors of "
 								+ varNames[link.first] + " and " + varNames[link.second]
 								+ " on connecting paths, forming " + separatingSetCandidates.size()
 								+ " separating set candidates");
@@ -81,7 +77,7 @@ public class PcStarAlgorithm extends PcAlgorithm {
 					if (!BASIC_INFO || separatingSetCandidates.size() > 0)
 						System.out.println("  Minimizing partial correlation for fixed link " + varNames[link.first]
 								+ "-" + varNames[link.second] + " using the " + neighbors.size()
-								+ " other neighbors of " + varNames[link.first] + " and " + varNames[link.second]
+								+ " neighbors of " + varNames[link.first] + " and " + varNames[link.second]
 								+ " on connecting paths, forming " + separatingSetCandidates.size()
 								+ " separating set candidates");
 				}
@@ -115,9 +111,9 @@ public class PcStarAlgorithm extends PcAlgorithm {
 					graph.removeLink(link.first, link.second);
 				} else {
 					if (presetLink)
-						remainingLinkStrength.get(link.first).put(link.second, 1.0);
+						graph.setRemainingLinkStrength(link.first, link.second, 1.0);
 					else
-						remainingLinkStrength.get(link.first).put(link.second, minPartialCorrelation);
+						graph.setRemainingLinkStrength(link.first, link.second, minPartialCorrelation);
 				}
 			}
 

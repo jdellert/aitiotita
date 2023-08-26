@@ -30,6 +30,7 @@ public class CausalGraphSummary {
 	public static final int LINE_ARROW = 5;
 	public static final int ARROW_LINE = 6;
 	public static final int ARROW_ARROW = 7;
+	public static final int LINE_LINE = 8;
 	
 	//optional display: coordinates and colors
 	Map<Integer, Map<Integer, Map<Integer, String>>> colors;
@@ -70,6 +71,7 @@ public class CausalGraphSummary {
 		}
 		if (endSymbol1 == 1) {
 			if (endSymbol2 == 0) return CIRCLE_LINE;
+			if (endSymbol2 == 1) return LINE_LINE;
 			if (endSymbol2 == 2) return ARROW_LINE;
 		}
 		if (endSymbol1 == 2) {
@@ -91,6 +93,7 @@ public class CausalGraphSummary {
 			case LINE_ARROW: return "-->";
 			case ARROW_LINE: return "<--";
 			case ARROW_ARROW: return "<->";
+			case LINE_LINE: return "---";	
 			default: return "?-?";
 		}	
 	}
@@ -142,7 +145,6 @@ public class CausalGraphSummary {
     	Map<Integer,Integer> arrowSymbolCountsForPair = arrowSymbolCounts.get(var1).get(var2);
     	Integer arrowCount = arrowSymbolCountsForPair.get(arrowSymbol);
     	if (arrowCount != null) {
-    		System.err.println("arrow count " + varNames[var1] + " " + arrowSymbolToString(arrowSymbol) + " " + varNames[var2] + " : " + arrowCount);
     		return arrowCount;
     	}
     	return 0;
@@ -168,7 +170,8 @@ public class CausalGraphSummary {
 				case ARROW_CIRCLE: return "#80d100"; //light green
 				case CIRCLE_LINE: return "#cccc00"; //yellow
 				case LINE_CIRCLE: return "#cccc00"; //yellow
-				case CIRCLE_CIRCLE: return "#cccc00"; //yellow		
+				case CIRCLE_CIRCLE: return "#cccc00"; //yellow	
+				case LINE_LINE: return "#cc0000"; //red
 			}
 		} 
 		return colorPerSymbol.get(arrowSymbol);
@@ -190,142 +193,9 @@ public class CausalGraphSummary {
 		return pairs;
 	}
 	
-	public void outputToDotFormat(PrintStream out, double strengtheningFactor) 
+	public void printInTextFormat()
 	{
-		out.println("digraph LanguageGraph");
-		out.println("{");
-		out.println("  splines=true;");
-		out.println("  node [ fontname=Arial, fontcolor=blue, fontsize=20];");
-		
-		for (String varName : nameToVar.keySet())
-		{
-			out.println("  " + varName + ";");
-		}
-		
-		List<String> undirectedSubgraphLink = new LinkedList<String>();
-        List<String> directedSubgraphLink = new LinkedList<String>();
-        List<String> directedPresetLink = new LinkedList<String>();       
-        List<String> bidirectedSubgraphLink = new LinkedList<String>();
-        for (Pair<Integer,Integer> link : listAllLinks())
-        {
-        	String lang1 = varNames[link.first];
-        	String lang2 = varNames[link.second];
-        	
-        	System.err.print("corrMatrix[" + lang1 + "][" + lang2 + "] = ");
-        	double correlationStrength = (double) neighborCounts.get(link.first).get(link.second) / numGraphs;
-        	
-        	System.err.println(correlationStrength);
-        	
-        	if (correlationStrength == 0.0) continue;
-        	int lineWidth = (int) (correlationStrength / 0.05);
-        	//if (correlationStrength > 0.0025) lineWidth++;       	
-        	//if (correlationStrength > 0.005) lineWidth++;
-        	//if (correlationStrength > 0.01) lineWidth++; 
-        	//if (correlationStrength > 0.02) lineWidth++;   
-        	//if (correlationStrength > 0.04) lineWidth++;   
-        	//if (correlationStrength > 0.08) lineWidth++;   
-        	//if (correlationStrength > 0.16) lineWidth++; 
-        	//if (correlationStrength > 0.32) lineWidth++;
-        	//if (correlationStrength > 0.64) lineWidth++;     	
-        	correlationStrength *= strengtheningFactor; //25 is good for basic correlation, 100 for remnants after causal inference on cognates, 5 on correlations only
-        	if (correlationStrength > 1.0) correlationStrength = 1.0;
-        	String alphaValue = Integer.toHexString((int) (correlationStrength * 255));
-        	if (alphaValue.length() == 1) alphaValue = "0" + alphaValue; //add 0 in front of single-digit numbers
-        	
-        	if (lineWidth < 2) continue;
-        	
-        	int arrowAndArrowCount = getArrowCount(link.first, link.second, ARROW_ARROW);
-        	if (arrowAndArrowCount > 0) {
-        		lineWidth = (int) ((arrowAndArrowCount / (correlationStrength * numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			bidirectedSubgraphLink.add(lang1 + " -> " + lang2 + " [color=\"" + getLinkColor(link.first, link.second, ARROW_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
-        	}
-        	
-        	int lineAndArrowCount = getArrowCount(link.first, link.second, LINE_ARROW);
-        	if (lineAndArrowCount > 0) {
-        		lineWidth = (int) ((lineAndArrowCount / (correlationStrength * numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(lang1 + " -> " + lang2 + " [color=\"" + getLinkColor(link.first, link.second, LINE_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
-        	}
-        	
-        	int circleAndArrowCount = getArrowCount(link.first, link.second, CIRCLE_ARROW);
-        	if (circleAndArrowCount > 0) {
-        		lineWidth = (int) ((circleAndArrowCount / (correlationStrength * numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(lang1 + " -> " + lang2 + " [color=\"" + getLinkColor(link.first, link.second, CIRCLE_ARROW) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
-        	}
-        	
-        	int arrowAndLineCount = getArrowCount(link.first, link.second, ARROW_LINE);
-        	if (arrowAndLineCount > 0) {
-        		lineWidth = (int) ((arrowAndLineCount / (correlationStrength * numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(lang2 + " -> " + lang1 + " [color=\"" + getLinkColor(link.first, link.second, ARROW_LINE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
-        	}
-        	
-        	int circleAndLineCount = getArrowCount(link.first, link.second, CIRCLE_LINE);
-        	if (circleAndLineCount > 0) {
-        		lineWidth = (int) ((circleAndLineCount / (correlationStrength * numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(lang2 + " -> " + lang1 + " [color=\"" + getLinkColor(link.first, link.second, CIRCLE_LINE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
-        	}
-        	
-        	int arrowAndCircleCount = getArrowCount(link.first, link.second, ARROW_CIRCLE);
-        	if (arrowAndCircleCount > 0) {
-        		lineWidth = (int) ((arrowAndCircleCount / (correlationStrength * numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(lang2 + " -> " + lang1 + " [color=\"" + getLinkColor(link.first, link.second, ARROW_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
-        	}
-        	
-        	int lineAndCircleCount = getArrowCount(link.first, link.second, LINE_CIRCLE);
-        	if (lineAndCircleCount > 0) {
-        		lineWidth = (int) ((lineAndCircleCount / (correlationStrength * numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			directedSubgraphLink.add(lang1 + " -> " + lang2 + " [color=\"" + getLinkColor(link.first, link.second, LINE_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
-        	}
-        	
-        	int circleAndCircleCount = getArrowCount(link.first, link.second, CIRCLE_CIRCLE);
-        	if (circleAndCircleCount > 0) {
-        		lineWidth = (int) ((circleAndCircleCount / (correlationStrength * numGraphs)) / 0.05);
-        		if (lineWidth > 0)
-        			undirectedSubgraphLink.add(lang1 + " -> " + lang2 + " [color=\"" + getLinkColor(link.first, link.second, CIRCLE_CIRCLE) + alphaValue + "\",penwidth=\""  + lineWidth + "\"];");
-        	}
-        	
-        }
-        out.println("subgraph undirected");
-        out.println("{");
-        out.println("  edge [dir=none];");
-        for (String link : undirectedSubgraphLink)
-        {
-        	 out.println("  " + link);
-        }
-        out.println("}");
-        out.println("subgraph bidirected");
-        out.println("{");
-        out.println("  edge [dir=none];");
-        for (String link : bidirectedSubgraphLink)
-        {
-        	 out.println("  " + link);
-        }
-        out.println("}");
-        out.println("subgraph directed");
-        out.println("{");
-        out.println("  edge [arrowsize=1];");
-        for (String link : directedSubgraphLink)
-        {
-        	 out.println("  " + link);
-        }
-        out.println("}");
-        out.println("subgraph directedPreset");
-        out.println("{");
-        out.println("  edge [arrowsize=1];");
-        for (String link : directedPresetLink)
-        {
-        	 out.println("  " + link);
-        }
-        out.println("}");
-		
-		out.println("}");
-		
-		out.close();
+		CausalGraphOutput.outputToTextFormat(this, System.out);
 	}
+	
 }
