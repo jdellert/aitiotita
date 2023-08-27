@@ -8,7 +8,7 @@ import de.tuebingen.sfs.causal.data.CausalGraphOutput;
 import de.tuebingen.sfs.util.struct.Pair;
 
 public class OrientationRules {
-	private static final boolean VERBOSE = false;
+	public static boolean VERBOSE = false;
 
 	public static boolean applyZhangOrientationRule1(CausalGraph graph, String[] varNames) {
 		// R1: unshielded A *-> B o-* C => A *-> B --> C
@@ -40,6 +40,7 @@ public class OrientationRules {
 	}
 
 	public static boolean applyZhangOrientationRule2(CausalGraph graph, String[] varNames) {
+		//acyclicity condition
 		boolean hasChanged = false;
 		for (Pair<Integer, Integer> link : graph.listAllLinksInBothDirections()) {
 			if (graph.getEndSymbol(link.first, link.second) == CausalGraph.CIRCLE_END) {
@@ -66,6 +67,7 @@ public class OrientationRules {
 	}
 
 	public static boolean applyZhangOrientationRule3(CausalGraph graph, String[] varNames) {
+		//inference by a contradiction arising from unshielded collider with acyclicity condition
 		boolean hasChanged = false;
 		for (Integer[] triple : graph.listUnshieldedTriples()) {
 			if (graph.getEndSymbol(triple[0], triple[2]) == CausalGraph.ARROW_END

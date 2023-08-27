@@ -27,11 +27,12 @@ public class PcAlgorithm {
 	int maxCondSetSize;
 	boolean conservative;
 	boolean stable;
+	boolean acyclicity;
 
 	public Map<Integer, Map<Integer, List<Set<Integer>>>> separatingSets;
 
 	public PcAlgorithm(PartialCorrelation<?> corrMeasure, CausalArrowFinder<?> arrowFinder, String[] varNames,
-			CausalGraph initialGraphWithConstraints, int maxCondSetSize, boolean stable, boolean conservative) {
+			CausalGraph initialGraphWithConstraints, int maxCondSetSize, boolean stable, boolean conservative, boolean acyclicity) {
 		this.corrMeasure = corrMeasure;
 		this.arrowFinder = arrowFinder;
 		this.varNames = varNames;
@@ -39,7 +40,8 @@ public class PcAlgorithm {
 		this.maxCondSetSize = maxCondSetSize;
 		this.stable = stable;
 		this.conservative = conservative;
-
+		this.acyclicity = acyclicity;
+		
 		this.separatingSets = new TreeMap<Integer, Map<Integer, List<Set<Integer>>>>();
 
 	}
@@ -287,14 +289,16 @@ public class PcAlgorithm {
 			boolean hasChanged = true;
 			while (hasChanged) {
 				hasChanged = false;
+				
+				if (BASIC_INFO) OrientationRules.VERBOSE = true;
 
 				// rules for propagating arrows (just as in PC algorithm)
 				// R1: unshielded A *-> B o-* C => A *-> B --> C
 				hasChanged |= OrientationRules.applyZhangOrientationRule1(graph, varNames);
 				// R2: A *-> B -> C or A -> B *-> C and A *-o C => A *-> C
-				hasChanged |= OrientationRules.applyZhangOrientationRule2(graph, varNames);
+				if (acyclicity) hasChanged |= OrientationRules.applyZhangOrientationRule2(graph, varNames);
 				// R3: v-structure A *-> B <-* C and A *-o D o-* C where D *-o B imply D *-> B
-				hasChanged |= OrientationRules.applyZhangOrientationRule3(graph, varNames);
+				if (acyclicity) hasChanged |= OrientationRules.applyZhangOrientationRule3(graph, varNames);
 			}
 		}
 	}

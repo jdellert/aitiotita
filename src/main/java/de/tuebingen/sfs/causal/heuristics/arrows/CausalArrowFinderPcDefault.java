@@ -82,7 +82,7 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 			{
 				if (sepSetsContainingK == 0)
 				{
-					if (BASIC_INFO) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
+					if (BASIC_INFO) System.out.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
 					if (!graph.hasPresetEnd(triple[0], triple[2])) graph.putArrow(triple[0], triple[2], true);
 					if (!graph.hasPresetEnd(triple[1], triple[2])) graph.putArrow(triple[1], triple[2], true);	
 				}
@@ -91,7 +91,7 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 			{
 				if (sepSetsContainingK <= relevantSepSets.size() / 2)
 				{
-					if (BASIC_INFO) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
+					if (BASIC_INFO) System.out.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
 					if (!graph.hasPresetEnd(triple[0], triple[2])) graph.putArrow(triple[0], triple[2], true);
 					if (!graph.hasPresetEnd(triple[1], triple[2])) graph.putArrow(triple[1], triple[2], true);	
 				}
@@ -100,7 +100,7 @@ public class CausalArrowFinderPcDefault<T> extends CausalArrowFinder<T>
 			{
 				if (!firstSepSetContainsK)
 				{
-					if (BASIC_INFO) System.err.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
+					if (BASIC_INFO) System.out.println("Found v-structure: " + varNames[triple[0]] + " -> " + varNames[triple[2]] + " <- " + varNames[triple[1]]);
 					if (!graph.hasPresetEnd(triple[0], triple[2])) graph.putArrow(triple[0], triple[2], true);
 					if (!graph.hasPresetEnd(triple[1], triple[2])) graph.putArrow(triple[1], triple[2], true);	
 				}

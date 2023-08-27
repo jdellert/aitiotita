@@ -16,12 +16,14 @@ import de.tuebingen.sfs.util.struct.RankingEntry;
 import de.tuebingen.sfs.util.struct.SetOperations;
 
 public class PcStarAlgorithm extends PcAlgorithm {
-	
+
 	boolean randomLinkOrder;
 
 	public PcStarAlgorithm(PartialCorrelation<?> corrMeasure, CausalArrowFinder<?> arrowFinder, String[] varNames,
-			CausalGraph initialGraphWithConstraints, int maxCondSetSize, boolean stable, boolean conservative, boolean randomLinkOrder) {
-		super(corrMeasure, arrowFinder, varNames, initialGraphWithConstraints, maxCondSetSize, stable, conservative);
+			CausalGraph initialGraphWithConstraints, int maxCondSetSize, boolean stable, boolean conservative,
+			boolean acyclicity, boolean randomLinkOrder) {
+		super(corrMeasure, arrowFinder, varNames, initialGraphWithConstraints, maxCondSetSize, stable, conservative,
+				acyclicity);
 		this.randomLinkOrder = randomLinkOrder;
 	}
 
@@ -30,9 +32,9 @@ public class PcStarAlgorithm extends PcAlgorithm {
 
 		for (int depth = 0; depth <= maxCondSetSize; depth++) {
 			List<Pair<Integer, Integer>> links = graph.listAllDeletableLinks();
-			System.out.println(
-					"Proceeding to separating set size " + depth + ", " + links.size() + " potentially deletable links left.");
-			
+			System.out.println("Proceeding to separating set size " + depth + ", " + links.size()
+					+ " potentially deletable links left.");
+
 			if (links.size() == 0) {
 				System.out.println("Skeleton inference is finished.");
 				break;
@@ -41,22 +43,23 @@ public class PcStarAlgorithm extends PcAlgorithm {
 			// sort links by remaining link strength, remove weakest links first
 			List<RankingEntry<Pair<Integer, Integer>>> linkRanking = new ArrayList<RankingEntry<Pair<Integer, Integer>>>(
 					links.size());
-			// make sure the random tie-breaking noise (and thereby the link ordering) will always be the same on the same data
+			// make sure the random tie-breaking noise (and thereby the link ordering) will
+			// always be the same on the same data
 			Random rand = new Random(links.size());
 			for (Pair<Integer, Integer> link : links) {
 				double partialCorrelation = 1.0;
 				if (depth > 0)
 					partialCorrelation = graph.getRemainingLinkStrength(link.first, link.second);
-				//add uniformly distributed noise of up to 5 percent the original value
+				// add uniformly distributed noise of up to 5 percent the original value
 				partialCorrelation += rand.nextDouble() * partialCorrelation / 20;
 				linkRanking.add(new RankingEntry<Pair<Integer, Integer>>(link, partialCorrelation));
 			}
-			
+
 			if (randomLinkOrder) {
 				Collections.shuffle(linkRanking);
 			} else {
 				Collections.sort(linkRanking);
-			}		
+			}
 
 			for (RankingEntry<Pair<Integer, Integer>> rankedLink : linkRanking) {
 				Pair<Integer, Integer> link = rankedLink.key;
@@ -74,16 +77,16 @@ public class PcStarAlgorithm extends PcAlgorithm {
 
 				if (!presetLink) {
 					if (!BASIC_INFO || separatingSetCandidates.size() > 0)
-						System.out.println("  Attempting to separate pair " + varNames[link.first] + "-"
-								+ varNames[link.second] + " using the " + neighbors.size() + " neighbors of "
-								+ varNames[link.first] + " and " + varNames[link.second]
-								+ " on connecting paths, forming " + separatingSetCandidates.size()
-								+ " separating set candidates");
+						System.out.println(
+								"  Attempting to separate pair " + varNames[link.first] + "-" + varNames[link.second]
+										+ " using the " + neighbors.size() + " neighbors of " + varNames[link.first]
+										+ " and " + varNames[link.second] + " on connecting paths, forming "
+										+ separatingSetCandidates.size() + " separating set candidates");
 				} else {
 					if (!BASIC_INFO || separatingSetCandidates.size() > 0)
 						System.out.println("  Minimizing partial correlation for fixed link " + varNames[link.first]
-								+ "-" + varNames[link.second] + " using the " + neighbors.size()
-								+ " neighbors of " + varNames[link.first] + " and " + varNames[link.second]
+								+ "-" + varNames[link.second] + " using the " + neighbors.size() + " neighbors of "
+								+ varNames[link.first] + " and " + varNames[link.second]
 								+ " on connecting paths, forming " + separatingSetCandidates.size()
 								+ " separating set candidates");
 				}
