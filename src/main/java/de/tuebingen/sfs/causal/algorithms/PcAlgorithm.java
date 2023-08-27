@@ -218,21 +218,27 @@ public class PcAlgorithm {
 
 	public void runDirectionalityInference() {
 
-		if (arrowFinder != null) {
-			for (int var1 = 0; var1 < varNames.length; var1++) {
-				for (int var2 = 0; var2 < varNames.length; var2++) {
-					if (var1 == var2)
-						continue;
-					arrowFinder.registerSepSets(var1, var2, separatingSets.get(var1).get(var2));
+		for (int var1 = 0; var1 < varNames.length; var1++) {
+			for (int var2 = 0; var2 < varNames.length; var2++) {
+				if (var1 == var2)
+					continue;
+				List<Set<Integer>> sepSetsForVarPair = separatingSets.get(var1).get(var2);
+				if (sepSetsForVarPair == null) {
+					sepSetsForVarPair = new LinkedList<Set<Integer>>();
+					sepSetsForVarPair.add(new TreeSet<Integer>());
+					separatingSets.get(var1).put(var2, sepSetsForVarPair);
 				}
+				if (arrowFinder != null) arrowFinder.registerSepSets(var1, var2, sepSetsForVarPair);
 			}
-
+		}
+		
+		if (arrowFinder != null) {
 			for (String[] arrow : arrowFinder.findArrows(graph, true)) {
 				int arrowStart = Arrays.asList(varNames).indexOf(arrow[0]);
 				int arrowEnd = Arrays.asList(varNames).indexOf(arrow[1]);
 				if (!graph.hasPresetArrow(arrowStart, arrowEnd) && !graph.hasPresetArrow(arrowEnd, arrowStart)) {
-					if (VERBOSE)
-						System.err.println("Adding arrow: " + arrow[0] + " -> " + arrow[1]);
+					if (BASIC_INFO)
+						System.out.println("Arrow finder adds arrow: " + arrow[0] + " -> " + arrow[1]);
 					graph.putArrow(arrowStart, arrowEnd, true);
 				}
 			}
@@ -241,32 +247,38 @@ public class PcAlgorithm {
 			for (Integer[] triple : graph.listUnshieldedTriples()) {
 				List<Set<Integer>> relevantSepSets = separatingSets.get(triple[0]).get(triple[1]);
 				int sepSetsContainingK = 0;
-				int numRelevantSepSets = 0;
-				if (relevantSepSets != null) {
-					for (Set<Integer> sepSet : relevantSepSets) {
-						if (sepSet.contains(triple[2])) {
-							sepSetsContainingK++;
-						}
+				int numRelevantSepSets = relevantSepSets.size();
+				for (Set<Integer> sepSet : relevantSepSets) {
+					if (sepSet.contains(triple[2])) {
+						sepSetsContainingK++;
 					}
-					numRelevantSepSets = relevantSepSets.size();
 				}
+				numRelevantSepSets = relevantSepSets.size();
 				// System.err.println("Separation sets containing K: " + sepSetsContainingK +
 				// "/" + relevantSepSets.size());
 				if (conservative) {
 					if (sepSetsContainingK == 0) {
 						if (BASIC_INFO)
-							System.err.println("Found v-structure: " + varNames[triple[0]] + " -> "
+							System.out.println("Found v-structure: " + varNames[triple[0]] + " -> "
 									+ varNames[triple[2]] + " <- " + varNames[triple[1]]);
 						graph.putArrow(triple[0], triple[2], true);
 						graph.putArrow(triple[1], triple[2], true);
+					} else {
+						if (VERBOSE)
+							System.out.println("Not a v-structure: " + varNames[triple[0]] + " -> "
+									+ varNames[triple[2]] + " <- " + varNames[triple[1]]);
 					}
 				} else {
 					if (sepSetsContainingK <= numRelevantSepSets / 2) {
 						if (BASIC_INFO)
-							System.err.println("Found v-structure: " + varNames[triple[0]] + " -> "
+							System.out.println("Found v-structure: " + varNames[triple[0]] + " -> "
 									+ varNames[triple[2]] + " <- " + varNames[triple[1]]);
 						graph.putArrow(triple[0], triple[2], true);
 						graph.putArrow(triple[1], triple[2], true);
+					} else {
+						if (VERBOSE)
+							System.out.println("Not a v-structure: " + varNames[triple[0]] + " -> "
+									+ varNames[triple[2]] + " <- " + varNames[triple[1]]);
 					}
 				}
 			}
