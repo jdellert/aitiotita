@@ -426,7 +426,7 @@ public class CausalGraph
 		if (!hasLink(var1,var2)) return 0.0;
 		Map<Integer, Double> strengths = remainingLinkStrength.get(var1);
 		if (strengths == null) return 1.0;
-		Double strength = strengths.get(var1);
+		Double strength = strengths.get(var2);
 		if (strength == null) return 1.0;
 		else return strength;
 	}

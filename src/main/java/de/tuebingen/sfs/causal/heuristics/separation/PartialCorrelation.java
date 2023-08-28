@@ -14,6 +14,8 @@ public abstract class PartialCorrelation<T>
 		this.varNames = varNames;
 	}
 	
+	public abstract double correlation(int xVar, int yVar);
+	
 	public abstract double partialCorrelation(int xVar, int yVar, Set<Integer> zVars);
 	
 	public abstract boolean independenceTest(double partialCorrelation, int xVar, int yVar, Set<Integer> zVars);

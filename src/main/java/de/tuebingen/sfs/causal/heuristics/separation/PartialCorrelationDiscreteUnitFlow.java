@@ -364,6 +364,10 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 		return false;
 	}
 	
+	public double correlation(int xVar, int yVar) {
+		return setsForLanguagePair.get(xVar).get(yVar).size();
+	}
+	
 	public double partialCorrelation(int xVar, int yVar, Set<Integer> zVars)
 	{
 		//long startTime = System.currentTimeMillis();
@@ -422,17 +426,18 @@ public class PartialCorrelationDiscreteUnitFlow extends PartialCorrelation<List<
 			}
 		}
 		
+		//versions for other applications (to be reactivated)
 		//double result = unexplainedCorrelates / Math.min(numXSets, numYSets);
-		double result = unexplainedCorrelates / Math.max(numXSets, numYSets);
+		//double result = unexplainedCorrelates / Math.max(numXSets, numYSets);
 		//double result = unexplainedCorrelates / 1016;
-		if (Math.min(numXSets, numYSets) == 0.0 || result == Double.NaN) result = 0.0;
+		//if (Math.min(numXSets, numYSets) == 0.0 || result == Double.NaN) result = 0.0;
 		//if (VERBOSE) System.err.println((int) explainedCorrelates + " U " + (int) unexplainedCorrelates + "/min(" + (int) numXSets + "," + (int) numYSets + ") = " + result);
-		if (VERBOSE) System.out.println((int) explainedCorrelates + " U " + (int) unexplainedCorrelates + "/max(" + (int) numXSets + "," + (int) numYSets + ") = " + result);
+		//if (VERBOSE) System.out.println((int) explainedCorrelates + " U " + (int) unexplainedCorrelates + "/max(" + (int) numXSets + "," + (int) numYSets + ") = " + result);
 		//if (VERBOSE) System.err.println((int) explainedCorrelates + " U " + (int) unexplainedCorrelates + "/1016 = " + result);
 		//long time = System.currentTimeMillis() - startTime;
 		//System.err.println("Time for partial correlation test: " + time + " ms.");
-		result = unexplainedCorrelates;
-		return result;
+		//result = unexplainedCorrelates;
+		return unexplainedCorrelates;
 	}
 
 	@Override

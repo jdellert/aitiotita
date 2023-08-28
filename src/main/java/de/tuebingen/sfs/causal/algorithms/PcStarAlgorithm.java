@@ -43,11 +43,11 @@ public class PcStarAlgorithm extends PcAlgorithm {
 			// sort links by remaining link strength, remove weakest links first
 			List<RankingEntry<Pair<Integer, Integer>>> linkRanking = new ArrayList<RankingEntry<Pair<Integer, Integer>>>(
 					links.size());
-			// make sure the random tie-breaking noise (and thereby the link ordering) will
-			// always be the same on the same data
+			// use length as random seed to make sure the random tie-breaking noise 
+			// (and thereby the link ranking) will always be the same on the same data
 			Random rand = new Random(links.size());
 			for (Pair<Integer, Integer> link : links) {
-				double partialCorrelation = 1.0;
+				double partialCorrelation = corrMeasure.correlation(link.first, link.second);
 				if (depth > 0)
 					partialCorrelation = graph.getRemainingLinkStrength(link.first, link.second);
 				// add uniformly distributed noise of up to 5 percent the original value
