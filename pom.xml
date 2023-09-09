@@ -4,7 +4,7 @@
   <groupId>de.tuebingen.sfs</groupId>
   <artifactId>aitiotita</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <name>aitiotita</name>
   <url>http://maven.apache.org</url>
   <properties>
